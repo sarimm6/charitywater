@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Charity Water Game</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <h1>Drop the Water!</h1>
+    <div class="instructions">Click and hold above the obstacles to release water into the jerrycan.</div>
+
+    <div id="game-container">
+        <canvas id="gameCanvas" width="800" height="600"></canvas>
+        <div id="ui">Water Collected: <span id="score">0</span> / 150</div>
+        
+        <div id="win-screen">
+            <h2>Thank You!</h2>
+            <p>You successfully filled the charity water jerrycan.</p>
+            <button onclick="resetGame()">Play Again</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
