@@ -12,12 +12,15 @@ body {
 h1 {
     margin: 15px 0 5px 0;
     color: #333;
+    text-align: center;
 }
 
 .instructions {
     margin-bottom: 15px;
     color: #555;
     font-size: 16px;
+    text-align: center;
+    padding: 0 15px;
 }
 
 #game-container {
@@ -26,11 +29,19 @@ h1 {
     border-radius: 12px;
     overflow: hidden;
     background: #ffffff;
+    
+    /* MOBILE RESPONSIVE SIZING */
+    width: 95vw; 
+    max-width: 800px;
 }
 
 canvas {
     display: block;
     cursor: crosshair;
+    
+    /* Forces canvas to fill container while maintaining aspect ratio */
+    width: 100%;
+    height: auto; 
 }
 
 #ui {
@@ -43,7 +54,7 @@ canvas {
     background: rgba(255, 255, 255, 0.9);
     padding: 10px 15px;
     border-radius: 8px;
-    pointer-events: auto; /* Enable clicking on the ui elements */
+    pointer-events: auto;
     box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     display: flex;
     align-items: center;
@@ -70,7 +81,7 @@ canvas {
     display: none;
     position: absolute;
     top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(247, 249, 250, 0.6); /* More transparent to allow the celebration to be seen */
+    background: rgba(247, 249, 250, 0.65); 
     color: #333;
     flex-direction: column;
     align-items: center;
@@ -89,6 +100,7 @@ canvas {
     font-size: 20px;
     margin-bottom: 25px;
     font-weight: bold;
+    padding: 0 20px;
 }
 
 button {
@@ -97,7 +109,7 @@ button {
     cursor: pointer;
     border: none;
     border-radius: 6px;
-    background: #f1c40f; /* charity: water branding yellow */
+    background: #f1c40f; 
     color: white;
     font-weight: bold;
     transition: transform 0.2s;
@@ -105,4 +117,25 @@ button {
 
 button:hover {
     transform: scale(1.05);
+}
+
+/* Adjust sizes for smaller mobile devices */
+@media (max-width: 600px) {
+    #ui {
+        font-size: 14px;
+        padding: 6px 10px;
+        top: 10px;
+        left: 10px;
+        gap: 10px;
+    }
+    #reset-btn {
+        padding: 4px 8px;
+        font-size: 14px;
+    }
+    #win-screen h2 {
+        font-size: 32px;
+    }
+    #win-screen p {
+        font-size: 16px;
+    }
 }

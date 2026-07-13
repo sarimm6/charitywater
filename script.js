@@ -233,15 +233,14 @@ function drawFallbackBranding(x, y, w, h) {
     ctx.fillStyle = "#222222";
     ctx.font = "bold 46px 'Georgia', serif";
     ctx.textAlign = "center";
-    ctx.letterSpacing = "4px"; // Emulate spacing if supported
+    ctx.letterSpacing = "4px"; 
     ctx.fillText("charity: water", 400, 580);
 }
-
 
 function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Draw line obstacles (We only draw the first two lines, not the jerrycan boundaries)
+    // Draw line obstacles
     ctx.strokeStyle = "#111111";
     ctx.lineWidth = 6;
     ctx.lineCap = "round";
@@ -268,7 +267,6 @@ function draw() {
         ctx.drawImage(logoImg, 290, 0, 150, 200, 325, 320, 150, 200);
         ctx.drawImage(logoImg, 0, 260, 732, 98, 217, 540, 366, 49);
     } else {
-        // Renders a perfect clone using code so the game never crashes
         drawFallbackBranding(325, 320, 150, 200); 
     }
 
@@ -292,18 +290,27 @@ function gameLoop() {
     requestAnimationFrame(gameLoop);
 }
 
-// Controls
-function updateMousePos(e) {
+// ----------------------------------------------------
+// RESPONSIVE CONTROLS (Mapped for CSS scaled canvas)
+// ----------------------------------------------------
+
+function getScaledPos(clientX, clientY) {
     const rect = canvas.getBoundingClientRect();
-    mouseX = e.clientX - rect.left;
-    mouseY = e.clientY - rect.top;
+    // Calculate the scale between the actual HTML size and the internal 800x600 grid
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    
+    mouseX = (clientX - rect.left) * scaleX;
+    mouseY = (clientY - rect.top) * scaleY;
+}
+
+function updateMousePos(e) {
+    getScaledPos(e.clientX, e.clientY);
 }
 
 function updateTouchPos(e) {
-    const rect = canvas.getBoundingClientRect();
-    mouseX = e.touches[0].clientX - rect.left;
-    mouseY = e.touches[0].clientY - rect.top;
-    if(e.cancelable) e.preventDefault();
+    getScaledPos(e.touches[0].clientX, e.touches[0].clientY);
+    if(e.cancelable) e.preventDefault(); // Prevents mobile from scrolling when touching canvas
 }
 
 // Mouse listeners
