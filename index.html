@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Charity Water Game</title>
+    <title>charity: water Game</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -13,11 +13,14 @@
 
     <div id="game-container">
         <canvas id="gameCanvas" width="800" height="600"></canvas>
-        <div id="ui">Water Collected: <span id="score">0</span> / 150</div>
+        <div id="ui">
+            <div>Water Collected: <span id="score">0</span> / 150</div>
+            <button id="reset-btn" onclick="resetGame()">Reset</button>
+        </div>
         
         <div id="win-screen">
             <h2>Thank You!</h2>
-            <p>You successfully filled the charity water jerrycan.</p>
+            <p>You successfully filled the charity: water jerrycan.</p>
             <button onclick="resetGame()">Play Again</button>
         </div>
     </div>

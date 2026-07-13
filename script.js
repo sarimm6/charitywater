@@ -4,55 +4,62 @@ const scoreElement = document.getElementById('score');
 const winScreen = document.getElementById('win-screen');
 
 let particles = [];
+let confetti = [];
 let isMouseDown = false;
 let mouseX = 400;
 let mouseY = 50;
 let gameWon = false;
 const TARGET_WATER = 150;
 
-// Collision bounds based on the reference drawing
+// Load charity: water branding
+const logoImg = new Image();
+logoImg.src = 'input_file_0.png';
+
+// Collision bounds based on mapped funnels and standard image overlay
 const segments = [
     // Left angled obstacle
-    {x1: 150, y1: 120, x2: 280, y2: 240},
+    {x1: 150, y1: 120, x2: 360, y2: 240},
     // Right angled obstacle
-    {x1: 650, y1: 150, x2: 480, y2: 250},
+    {x1: 650, y1: 150, x2: 440, y2: 250},
 
-    // JERRYCAN GEOMETRY
+    // JERRYCAN GEOMETRY (invisible bounds placed exactly behind the charity water graphic)
     // Left inner wall
-    {x1: 370, y1: 410, x2: 360, y2: 550},
+    {x1: 325, y1: 320, x2: 325, y2: 520},
     // Bottom wall
-    {x1: 360, y1: 550, x2: 470, y2: 560},
+    {x1: 325, y1: 520, x2: 475, y2: 520},
     // Right inner wall
-    {x1: 470, y1: 560, x2: 490, y2: 410},
-
-    // Decorative jerrycan features (Spout on left)
-    {x1: 370, y1: 410, x2: 330, y2: 420}, 
-    {x1: 330, y1: 420, x2: 310, y2: 450}, 
-    {x1: 310, y1: 450, x2: 365, y2: 460}, 
-    
-    // Decorative jerrycan features (Handle on right)
-    {x1: 490, y1: 410, x2: 430, y2: 400}, 
-    {x1: 430, y1: 400, x2: 435, y2: 440}, 
-    {x1: 435, y1: 440, x2: 475, y2: 445}  
+    {x1: 475, y1: 520, x2: 475, y2: 320}
 ];
 
-// The bounding box inside the jerrycan to check for "scored" water
-const targetBox = { x: 365, y: 440, w: 100, h: 110 };
+// The bounding box checking inside our new mapped jerrycan walls
+const targetBox = { x: 325, y: 320, w: 150, h: 200 };
 
-// Math helper for line collisions
 function closestPointOnSegment(p, a, b) {
     let ab = { x: b.x - a.x, y: b.y - a.y };
     let ap = { x: p.x - a.x, y: p.y - a.y };
     let t = (ap.x * ab.x + ap.y * ab.y) / (ab.x * ab.x + ab.y * ab.y);
-    t = Math.max(0, Math.min(1, t)); // clamp to segment
+    t = Math.max(0, Math.min(1, t)); 
     return { x: a.x + t * ab.x, y: a.y + t * ab.y };
 }
 
-function updatePhysics() {
-    if (gameWon) return;
+function spawnConfetti() {
+    for (let i = 0; i < 150; i++) {
+        confetti.push({
+            x: canvas.width / 2,
+            y: canvas.height / 2,
+            vx: (Math.random() - 0.5) * 25,
+            vy: (Math.random() - 1) * 20 - 5,
+            size: Math.random() * 8 + 6,
+            color: `hsl(${Math.random() * 360}, 100%, 50%)`,
+            rot: Math.random() * Math.PI,
+            rotSpeed: (Math.random() - 0.5) * 0.5
+        });
+    }
+}
 
-    // Spawn water when mouse is pressed
-    if (isMouseDown && particles.length < 600) { // Limit max particles to maintain 60FPS
+function updatePhysics() {
+    // Only permit water drops if game isn't won yet
+    if (isMouseDown && !gameWon && particles.length < 600) { 
         for (let i = 0; i < 3; i++) {
             particles.push({
                 x: mouseX + (Math.random() - 0.5) * 15,
@@ -97,13 +104,11 @@ function updatePhysics() {
                 let nx = dx / dist;
                 let ny = dy / dist;
 
-                // Push particles apart
                 p1.x -= nx * overlap;
                 p1.y -= ny * overlap;
                 p2.x += nx * overlap;
                 p2.y += ny * overlap;
 
-                // Simulate viscosity by sharing a bit of velocity
                 let dvx = p2.vx - p1.vx;
                 let dvy = p2.vy - p1.vy;
                 p1.vx += dvx * 0.05;
@@ -127,11 +132,9 @@ function updatePhysics() {
                 let nx = dx / dist;
                 let ny = dy / dist;
 
-                // Eject particle from line
                 p1.x += nx * overlap;
                 p1.y += ny * overlap;
 
-                // Reflect velocity with bounce (restitution) and friction
                 let dot = p1.vx * nx + p1.vy * ny;
                 p1.vx = (p1.vx - 1.4 * dot * nx) * 0.85;
                 p1.vy = (p1.vy - 1.4 * dot * ny) * 0.85;
@@ -145,42 +148,131 @@ function updatePhysics() {
         }
     }
 
-    // Remove particles that fell off the screen
     particles = particles.filter(p => p.y < canvas.height + 50);
 
-    // Update UI Score
     scoreElement.innerText = collectedCount;
-    if (collectedCount >= TARGET_WATER) {
+    if (collectedCount >= TARGET_WATER && !gameWon) {
         gameWon = true;
         winScreen.style.display = 'flex';
+        spawnConfetti();
     }
 }
+
+function updateConfetti() {
+    for (let c of confetti) {
+        c.x += c.vx;
+        c.y += c.vy;
+        c.vy += 0.4;
+        c.rot += c.rotSpeed;
+    }
+}
+
+function drawConfetti() {
+    for (let c of confetti) {
+        ctx.save();
+        ctx.translate(c.x, c.y);
+        ctx.rotate(c.rot);
+        ctx.fillStyle = c.color;
+        ctx.fillRect(-c.size/2, -c.size/2, c.size, c.size);
+        ctx.restore();
+    }
+}
+
+// Helper to draw safely-rounded rectangles across all browsers
+function drawRoundRect(ctx, x, y, width, height, radius) {
+    ctx.beginPath();
+    ctx.moveTo(x + radius, y);
+    ctx.lineTo(x + width - radius, y);
+    ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+    ctx.lineTo(x + width, y + height - radius);
+    ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+    ctx.lineTo(x + radius, y + height);
+    ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+    ctx.lineTo(x, y + radius);
+    ctx.quadraticCurveTo(x, y, x + radius, y);
+    ctx.closePath();
+}
+
+function drawFallbackBranding(x, y, w, h) {
+    // 1. Jerrycan coded clone
+    ctx.fillStyle = "#F2C744"; // charity: water yellow
+    drawRoundRect(ctx, x, y + 20, w, h - 20, 15);
+    ctx.fill();
+
+    // Spout (left)
+    ctx.beginPath();
+    ctx.moveTo(x + 10, y + 25); ctx.lineTo(x + 8, y + 5);
+    ctx.lineTo(x + 38, y - 2);  ctx.lineTo(x + 45, y + 25);
+    ctx.fill();
+
+    // Handle (top right)
+    drawRoundRect(ctx, x + 55, y, 70, 30, 8);
+    ctx.fill();
+    ctx.fillStyle = "#ffffff";
+    drawRoundRect(ctx, x + 70, y + 8, 40, 12, 5);
+    ctx.fill();
+
+    // X Indentation shape
+    ctx.strokeStyle = "#ffffff";
+    ctx.lineWidth = 14;
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+
+    ctx.beginPath();
+    ctx.moveTo(x + 25, y + 60);  ctx.lineTo(x + 55, y + 105); ctx.lineTo(x + 25, y + 160);
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(x + 125, y + 60); ctx.lineTo(x + 95, y + 105); ctx.lineTo(x + 125, y + 160);
+    ctx.stroke();
+
+    drawRoundRect(ctx, x + 55, y + 95, 40, 20, 4);
+    ctx.stroke();
+
+    // 2. Text coded clone
+    ctx.fillStyle = "#222222";
+    ctx.font = "bold 46px 'Georgia', serif";
+    ctx.textAlign = "center";
+    ctx.letterSpacing = "4px"; // Emulate spacing if supported
+    ctx.fillText("charity: water", 400, 580);
+}
+
 
 function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Draw line obstacles
+    // Draw line obstacles (We only draw the first two lines, not the jerrycan boundaries)
     ctx.strokeStyle = "#111111";
     ctx.lineWidth = 6;
     ctx.lineCap = "round";
     ctx.lineJoin = "round";
     
     ctx.beginPath();
-    for (let seg of segments) {
+    for (let i = 0; i < 2; i++) {
+        let seg = segments[i];
         ctx.moveTo(seg.x1, seg.y1);
         ctx.lineTo(seg.x2, seg.y2);
     }
     ctx.stroke();
 
-    // Draw water particles
-    ctx.fillStyle = "rgba(0, 191, 255, 0.75)"; // Light vibrant blue
+    // Draw water particles - Drawn behind the branding
+    ctx.fillStyle = "rgba(0, 191, 255, 0.75)";
     for (let p of particles) {
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
         ctx.fill();
     }
 
-    // Draw water source indicator when pouring
+    // Attempt to draw image, OR fallback to our code-drawn clone if broken/unavailable!
+    if (logoImg.complete && logoImg.naturalWidth > 0) {
+        ctx.drawImage(logoImg, 290, 0, 150, 200, 325, 320, 150, 200);
+        ctx.drawImage(logoImg, 0, 260, 732, 98, 217, 540, 366, 49);
+    } else {
+        // Renders a perfect clone using code so the game never crashes
+        drawFallbackBranding(325, 320, 150, 200); 
+    }
+
+    // Draw indicator
     if (isMouseDown && !gameWon) {
         ctx.fillStyle = "#aaddff";
         ctx.beginPath();
@@ -190,8 +282,13 @@ function draw() {
 }
 
 function gameLoop() {
-    updatePhysics();
+    updatePhysics(); 
+    if (gameWon) updateConfetti();
+    
     draw();
+    
+    if (gameWon) drawConfetti(); 
+    
     requestAnimationFrame(gameLoop);
 }
 
@@ -206,7 +303,7 @@ function updateTouchPos(e) {
     const rect = canvas.getBoundingClientRect();
     mouseX = e.touches[0].clientX - rect.left;
     mouseY = e.touches[0].clientY - rect.top;
-    e.preventDefault();
+    if(e.cancelable) e.preventDefault();
 }
 
 // Mouse listeners
@@ -222,6 +319,7 @@ canvas.addEventListener('touchmove', updateTouchPos, {passive: false});
 // Make reset Game function global so the HTML button can trigger it
 window.resetGame = function() {
     particles = [];
+    confetti = [];
     gameWon = false;
     winScreen.style.display = 'none';
     scoreElement.innerText = "0";
