@@ -9,6 +9,9 @@ An interactive charity: water inspired browser game built with plain HTML, CSS, 
 - Sound effects, score tracking, milestones, and win screen
 - Responsive layout for desktop and mobile
 
+## Demo
+Visit at https://sarimm6.github.io/charitywater/
+
 ## How to Run
 
 1. Open `index.html` in a browser, or
