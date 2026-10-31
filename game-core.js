@@ -69,11 +69,11 @@
     medium: [
       {
         name: 'Trapdoor', hint: 'The orange trapdoor opens on a beat — pour in bursts.',
-        target: 80, supply: 145, rhythm: 3,
+        target: 80, supply: 145, rhythm: 3.5,
         pour: { x: 70, y: 92, w: 150, h: 48 },
         can: can(560),
         paths: [[55, 165, 330, 230], [370, 195, 370, 245], [420, 295, 600, 335], [670, 300, 670, 385]],
-        trapdoors: [{ seg: [320, 275, 420, 295], period: 3, open: 0.4, phase: 0 }]
+        trapdoors: [{ seg: [320, 275, 420, 295], period: 3.5, open: 0.3, phase: 0 }]
       },
       {
         name: 'Moving Target', hint: 'The can is on the move. Time the waterfall.',
@@ -102,13 +102,13 @@
     hard: [
       {
         name: 'Clockwork', hint: 'Two trapdoors, one rhythm. Find the window that clears both.',
-        target: 100, supply: 140, rhythm: 2.4,
+        target: 100, supply: 140, rhythm: 3,
         pour: { x: 75, y: 92, w: 90, h: 48 },
         can: smallCan(320),
         paths: [[55, 150, 480, 215], [520, 180, 520, 230], [430, 280, 220, 320], [180, 285, 180, 335], [270, 383, 330, 395], [400, 370, 400, 418]],
         trapdoors: [
-          { seg: [530, 262, 430, 280], period: 2.4, open: 0.4, phase: 0 },
-          { seg: [170, 365, 270, 383], period: 2.4, open: 0.4, phase: 0.5 }
+          { seg: [530, 262, 430, 280], period: 3, open: 0.33, phase: 0 },
+          { seg: [170, 365, 270, 383], period: 3, open: 0.33, phase: 0.5 }
         ]
       },
       {
@@ -117,7 +117,7 @@
         pour: { x: 640, y: 92, w: 90, h: 48 },
         can: smallCan(160, { move: { dx: 240, period: 3, phase: 0, rest: true } }),
         paths: [[765, 150, 560, 195], [520, 160, 520, 210], [470, 258, 250, 300], [170, 255, 170, 418]],
-        trapdoors: [{ seg: [570, 240, 470, 258], period: 3, open: 0.5, phase: 0.55 }]
+        trapdoors: [{ seg: [570, 240, 470, 258], period: 3, open: 0.3, phase: 0.55 }]
       },
       {
         name: 'Double Switch', hint: 'Two switches swing out of step. Read both before you pour.',
@@ -136,7 +136,7 @@
         pour: { x: 640, y: 92, w: 90, h: 48 },
         can: smallCan(140),
         paths: [[765, 150, 600, 190], [510, 212, 450, 227], [405, 175, 405, 232], [380, 360, 290, 380], [150, 360, 150, 418]],
-        trapdoors: [{ seg: [600, 190, 510, 212], period: 3, open: 0.35, phase: 0 }],
+        trapdoors: [{ seg: [600, 190, 510, 212], period: 3, open: 0.3, phase: 0 }],
         swings: [{ x: 410, y: 302, len: 110, from: 25, to: 155, period: 3, phase: 0.3 }],
         sliders: [{ seg: [290, 380, 230, 393], slide: { dx: -80, dy: 0 }, period: 1.5, phase: 0 }]
       }
@@ -152,8 +152,17 @@
   const cycle = (t, period, phase) => (((t / period + (phase || 0)) % 1) + 1) % 1;
 
   function trapdoorOpen(door, t) { return cycle(t, door.period, door.phase) < door.open; }
-  // 0 = about to close/closed, 1 = fully open; used for drawing and warnings
-  function trapdoorWarning(door, t) { const u = cycle(t, door.period, door.phase); return u > 1 - 0.18 ? (u - (1 - 0.18)) / 0.18 : 0; }
+  // Where a trapdoor is in its cycle, for drawing: whether it is open, how far through the
+  // current state it is (0..1), seconds until it flips, and a 0..1 warning ramp over the
+  // last WARN seconds before it flips either way.
+  const TRAPDOOR_WARN = 0.7;
+  function trapdoorState(door, t) {
+    const u = cycle(t, door.period, door.phase), open = u < door.open;
+    const span = (open ? door.open : 1 - door.open) * door.period;
+    const elapsed = (open ? u : u - door.open) * door.period;
+    const remaining = span - elapsed;
+    return { open, progress: elapsed / span, remaining, warn: remaining < TRAPDOOR_WARN ? 1 - remaining / TRAPDOOR_WARN : 0 };
+  }
 
   function sliderSeg(s, t) {
     const k = dwell(cycle(t, s.period, s.phase));
@@ -293,7 +302,7 @@
     const n = 2 + Math.floor(rand() * 2);
     const size = tier >= 3 ? SMALL_CAN : CAN;
     const canTop = canBody(Object.assign({ x: 0 }, size)).top;
-    const rhythm = 2.4 + Math.round(rand() * 8) / 10;
+    const rhythm = 2.8 + Math.round(rand() * 8) / 10;
     const paths = [], trapdoors = [];
     const yStart = 150 + rand() * 8, yEnd = canTop - 40;
     const dropPer = (yEnd - yStart - 45 * (n - 1)) / n;
@@ -307,7 +316,7 @@
       if (trapHere) {
         // the first 100px under the previous turn is a trapdoor
         const ty = y + slope * 100;
-        trapdoors.push({ seg: [x, y, x + dir * 100, ty], period: rhythm, open: 0.35 + 0.05 * tier, phase: rand() });
+        trapdoors.push({ seg: [x, y, x + dir * 100, ty], period: rhythm, open: 0.3, phase: rand() });
         paths.push([x, y - 40, x, y], [x + dir * 100, ty, xb, yb]);
       } else {
         paths.push(i > 0 ? [x, y - 40, x, y, xb, yb] : [x, y, xb, yb]);
@@ -382,7 +391,7 @@
 
   const api = {
     PHYS, levels, createWorld, stepWorld, inPourZone, supplyLeft, isFailed, randomLevel,
-    canAt, canBody, staticSegments, sliderSeg, swingSeg, trapdoorOpen, trapdoorWarning, cycle, mulberry32
+    canAt, canBody, staticSegments, sliderSeg, swingSeg, trapdoorOpen, trapdoorState, cycle, mulberry32
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.WaterWay = api;

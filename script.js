@@ -1,6 +1,6 @@
 // Water Way — rendering, input and UI. Physics and levels live in game-core.js.
 const { PHYS, levels, createWorld, stepWorld, inPourZone, supplyLeft, isFailed, randomLevel,
-  canAt, sliderSeg, swingSeg, trapdoorOpen, trapdoorWarning } = window.WaterWay;
+  canAt, sliderSeg, swingSeg, trapdoorState } = window.WaterWay;
 
 const $ = s => document.querySelector(s);
 const canvas = $('#gameCanvas'), ctx = canvas.getContext('2d');
@@ -209,15 +209,40 @@ function drawPourZone() {
 function drawTrapdoors(t) {
   for (const d of level.trapdoors || []) {
     const [x1, y1, x2, y2] = d.seg;
-    if (trapdoorOpen(d, t)) {
-      // hinged flaps hanging from both ends
-      const len = Math.hypot(x2 - x1, y2 - y1) * 0.42;
-      strokeCourse(() => { ctx.moveTo(x1, y1); ctx.lineTo(x1 + 4, y1 + len); ctx.moveTo(x2, y2); ctx.lineTo(x2 - 4, y2 + len); }, '#b4502f', '#e88a5c');
+    const st = trapdoorState(d, t), blink = st.warn > 0 && Math.floor(st.warn * 7) % 2 === 0;
+    const len = Math.hypot(x2 - x1, y2 - y1) / 2, base = Math.atan2(y2 - y1, x2 - x1);
+    if (st.open) {
+      // Flaps hang from the hinges, then swing back up as the door gets ready to close.
+      const drop = (Math.PI / 2 - 0.15) * (1 - st.warn * 0.85);
+      const fx1 = x1 + Math.cos(base + drop) * len * 0.85, fy1 = y1 + Math.sin(base + drop) * len * 0.85;
+      const fx2 = x2 - Math.cos(base - drop) * len * 0.85, fy2 = y2 - Math.sin(base - drop) * len * 0.85;
+      strokeCourse(() => { ctx.moveTo(x1, y1); ctx.lineTo(fx1, fy1); ctx.moveTo(x2, y2); ctx.lineTo(fx2, fy2); },
+        blink ? '#2f8f57' : '#b4502f', blink ? '#8fe0ae' : '#e88a5c');
     } else {
-      const warn = trapdoorWarning(d, t), blink = warn > 0 && Math.floor(warn * 6) % 2 === 0;
       strokeCourse(() => segmentPath(d.seg), blink ? '#f2b33d' : '#c2562f', blink ? '#ffe39a' : '#f08a5d');
     }
+    drawTrapdoorTimer(d, st);
   }
+}
+
+// A small dial above each trapdoor: green while it is shut (safe to pour through),
+// red while it is open. The arc empties as the door approaches its next flip.
+function drawTrapdoorTimer(d, st) {
+  const [x1, y1, x2, y2] = d.seg, cx = (x1 + x2) / 2, cy = Math.max(y1, y2) + 34, r = 9;
+  const color = st.open ? '#e0613f' : '#2f9e5f';
+  ctx.save();
+  ctx.fillStyle = '#ffffffe6'; ctx.beginPath(); ctx.arc(cx, cy, r + 3, 0, 7); ctx.fill();
+  ctx.fillStyle = color; ctx.beginPath(); ctx.moveTo(cx, cy);
+  ctx.arc(cx, cy, r, -Math.PI / 2, -Math.PI / 2 + (1 - st.progress) * Math.PI * 2); ctx.closePath(); ctx.fill();
+  if (st.warn > 0) {
+    ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.globalAlpha = 1 - st.warn * 0.6;
+    ctx.beginPath(); ctx.arc(cx, cy, r + 4 + st.warn * 6, 0, 7); ctx.stroke(); ctx.globalAlpha = 1;
+  }
+  ctx.fillStyle = '#1d242d'; ctx.font = '900 8px "Nunito Sans", sans-serif'; ctx.textAlign = 'center';
+  const label = st.open ? (st.warn > 0 ? 'CLOSING' : 'OPEN') : (st.warn > 0 ? 'OPENING' : 'SHUT');
+  ctx.fillStyle = '#ffffffd9'; ctx.beginPath(); ctx.roundRect(cx - 22, cy + r + 5, 44, 12, 6); ctx.fill();
+  ctx.fillStyle = color; ctx.fillText(label, cx, cy + r + 14);
+  ctx.restore();
 }
 
 function drawMovers(t) {
