@@ -21,11 +21,11 @@
     <section class="intro">
       <p class="eyebrow">A little water can go a long way</p>
       <h1>Guide every drop <em>home.</em></h1>
-      <p class="instructions">Press and hold to pour anywhere upstream of the can. Follow the course and keep every drop out of the sand.</p>
+      <p class="instructions">Press and hold inside the blue zone to pour. Your water is limited — guide it down the course, time the moving parts, and keep every drop out of the sand.</p>
     </section>
 
     <section class="level-panel" aria-label="Choose difficulty">
-      <div class="level-copy"><span id="level-kicker">LEVEL 1 OF 2</span><strong id="level-name">Easy · First Drop</strong></div>
+      <div class="level-copy"><span id="level-kicker">LEVEL 1 OF 4</span><strong id="level-name">Easy · First Drop</strong></div>
       <div class="difficulty-buttons" role="group" aria-label="Difficulty">
         <button class="difficulty active" data-difficulty="easy">Easy</button>
         <button class="difficulty" data-difficulty="medium">Medium</button>
@@ -37,7 +37,7 @@
     <section id="game-container" aria-label="Water physics game">
       <canvas id="gameCanvas" width="800" height="600" aria-label="Press and hold to pour water into the jerrycan"></canvas>
       <div id="hud">
-        <div class="water-readout"><span>IN THE CAN</span><strong><span id="score">0</span> / <span id="target">90</span></strong></div>
+        <div class="water-readout"><span>IN THE CAN</span><strong><span id="score">0</span> / <span id="target">50</span></strong><small><b id="supply">110</b> drops left</small></div>
         <div class="score-readout"><span>SCORE</span><strong id="points">0</strong><small><span id="accuracy">100</span>% saved · <span id="lost">0</span> lost</small></div>
         <div class="progress-track" aria-label="Water collected"><div id="progress-fill"></div><i class="milestone-dot first"></i><i class="milestone-dot second"></i><i class="milestone-dot third"></i></div>
         <button id="sound-btn" class="icon-btn" aria-label="Turn sound on">♬</button>
@@ -46,9 +46,9 @@
       <div id="milestone" role="status"></div>
       <div id="win-screen">
         <div class="win-card">
-          <span class="sun">✦</span>
-          <p class="eyebrow">JERRYCAN FILLED</p>
-          <h2>Every drop<br>counts.</h2>
+          <span class="sun" id="end-badge">✦</span>
+          <p class="eyebrow" id="end-eyebrow">JERRYCAN FILLED</p>
+          <h2 id="end-title">Every drop<br>counts.</h2>
           <p id="win-message">You filled the can!</p>
           <div class="win-actions"><button id="next-btn">Next level</button><button id="replay-btn" class="secondary">Play again</button></div>
         </div>
@@ -60,6 +60,7 @@
     <p>Inspired by the work of <a href="https://www.charitywater.org/" target="_blank" rel="noopener">charity: water</a>.</p>
     <nav aria-label="charity: water links"><a href="https://www.charitywater.org/about" target="_blank" rel="noopener">About</a><a href="https://www.charitywater.org/donate" target="_blank" rel="noopener">Donate</a><a href="https://www.charitywater.org/our-work" target="_blank" rel="noopener">Our work</a></nav>
   </footer>
+  <script src="game-core.js"></script>
   <script src="script.js"></script>
 </body>
 </html>
